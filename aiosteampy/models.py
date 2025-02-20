@@ -138,12 +138,12 @@ class EconItem:
 
     amount: int  # if stackable
 
-    description: ItemDescription
+    description: ItemDescription | None = None
     tradable_after: datetime | None = field(init=False, default=None)
 
     def __post_init__(self):
         self._set_ident_code()
-        self._set_tradable_after()
+        # self._set_tradable_after()
 
     def _set_ident_code(self):
         self.id = create_ident_code(self.asset_id, self.app_context.context, self.app_context.app.value)
