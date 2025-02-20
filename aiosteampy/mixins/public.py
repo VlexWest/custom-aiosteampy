@@ -541,7 +541,7 @@ class SteamCommunityPublicMixin(SteamHTTPTransportMixin):
     ) -> PriceOverview:
         ...
 
-    @currency_required
+    # @currency_required
     async def fetch_price_overview(
             self,
             obj: str | ItemDescription,
@@ -574,8 +574,8 @@ class SteamCommunityPublicMixin(SteamHTTPTransportMixin):
             name = obj
 
         params = {
-            "country": self.country if currency is None else currency,
-            "currency": self.currency if country is None else country,
+            "country": self.country if country is None else country,
+            "currency": self.currency if currency is None else currency.value,
             "market_hash_name": name,
             "appid": app.value,
             **params,
