@@ -2,7 +2,7 @@ from aiohttp import ClientResponseError
 from contextlib import suppress
 from datetime import datetime
 from re import compile as re_compile
-from typing import TypeAlias, overload, AsyncIterator, Literal, Callable, Sequence, Mapping
+from typing import TypeAlias, overload, AsyncIterator, Literal, Callable, Sequence, Mapping, Optional
 
 from .http import SteamHTTPTransportMixin
 from ..constants import STEAM_URL, App, AppContext, Currency, T_PARAMS, T_HEADERS, EResult
@@ -549,7 +549,7 @@ class SteamCommunityPublicMixin(SteamHTTPTransportMixin):
             *,
             params: T_PARAMS = {},
             headers: T_HEADERS = {},
-            currency: Optional[Currency.value] = None,
+            currency: Optional[Currency] = None,
             country: Optional[str] = None
     ) -> PriceOverview:
         """
