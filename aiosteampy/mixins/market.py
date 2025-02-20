@@ -1,12 +1,12 @@
-from contextlib import suppress
-from typing import overload, Literal, TypeAlias, AsyncIterator, Callable
-from datetime import datetime
-from re import search as re_search
-
 from aiohttp import ClientResponseError
 from aiohttp.client import _RequestContextManager
+from contextlib import suppress
+from datetime import datetime
+from re import search as re_search
+from typing import overload, Literal, TypeAlias, AsyncIterator, Callable
 
-from ..typed import WalletInfo
+from .confirmation import ConfirmationMixin
+from .public import SteamCommunityPublicMixin, T_SHARED_DESCRIPTIONS
 from ..constants import (
     STEAM_URL,
     App,
@@ -19,6 +19,8 @@ from ..constants import (
     EResult,
     Currency,
 )
+from ..exceptions import EResultError, SessionExpired
+from ..helpers import currency_required
 from ..models import (
     EconItem,
     MyMarketListing,
@@ -31,12 +33,8 @@ from ..models import (
     PriceHistoryEntry,
     MarketListing,
 )
-from ..helpers import currency_required
-from ..exceptions import EResultError, SessionExpired
+from ..typed import WalletInfo
 from ..utils import create_ident_code, buyer_pays_to_receive, calc_market_listing_fee
-from .public import SteamCommunityPublicMixin, T_SHARED_DESCRIPTIONS
-from .confirmation import ConfirmationMixin
-
 
 MY_LISTINGS_DATA: TypeAlias = tuple[list[MyMarketListing], list[MyMarketListing], list[BuyOrder], int]
 MY_MARKET_HISTORY_DATA: TypeAlias = tuple[list[MarketHistoryEvent], int]
@@ -53,166 +51,166 @@ class MarketMixin(ConfirmationMixin, SteamCommunityPublicMixin):
     # nice list
     @overload
     async def place_sell_listing(
-        self,
-        obj: EconItem,
-        *,
-        price: int,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: EconItem,
+            *,
+            price: int,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> int:
         ...
 
     @overload
     async def place_sell_listing(
-        self,
-        obj: EconItem,
-        *,
-        price: int,
-        confirm: Literal[False] = ...,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: EconItem,
+            *,
+            price: int,
+            confirm: Literal[False] = ...,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> None:
         ...
 
     @overload
     async def place_sell_listing(
-        self,
-        obj: EconItem,
-        *,
-        to_receive: int,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: EconItem,
+            *,
+            to_receive: int,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> int:
         ...
 
     @overload
     async def place_sell_listing(
-        self,
-        obj: EconItem,
-        *,
-        to_receive: int,
-        confirm: Literal[False] = ...,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: EconItem,
+            *,
+            to_receive: int,
+            confirm: Literal[False] = ...,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> None:
         ...
 
     @overload
     async def place_sell_listing(
-        self,
-        obj: int,
-        app_context: AppContext,
-        *,
-        price: int,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: int,
+            app_context: AppContext,
+            *,
+            price: int,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> int:
         ...
 
     @overload
     async def place_sell_listing(
-        self,
-        obj: int,
-        app_context: AppContext,
-        *,
-        price: int,
-        confirm: Literal[False] = ...,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: int,
+            app_context: AppContext,
+            *,
+            price: int,
+            confirm: Literal[False] = ...,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> None:
         ...
 
     @overload
     async def place_sell_listing(
-        self,
-        obj: int,
-        app_context: AppContext,
-        *,
-        to_receive: int,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: int,
+            app_context: AppContext,
+            *,
+            to_receive: int,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> int:
         ...
 
     @overload
     async def place_sell_listing(
-        self,
-        obj: int,
-        app_context: AppContext,
-        *,
-        to_receive: int,
-        confirm: Literal[False] = ...,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: int,
+            app_context: AppContext,
+            *,
+            to_receive: int,
+            confirm: Literal[False] = ...,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> None:
         ...
 
     @overload
     async def place_sell_listing(
-        self,
-        obj: EconItem,
-        *,
-        price: int,
-        fetch: Literal[True] = ...,
-        confirm: bool = ...,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: EconItem,
+            *,
+            price: int,
+            fetch: Literal[True] = ...,
+            confirm: bool = ...,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> MyMarketListing:
         ...
 
     @overload
     async def place_sell_listing(
-        self,
-        obj: EconItem,
-        *,
-        to_receive: int,
-        fetch: Literal[True] = ...,
-        confirm: bool = ...,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: EconItem,
+            *,
+            to_receive: int,
+            fetch: Literal[True] = ...,
+            confirm: bool = ...,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> MyMarketListing:
         ...
 
     @overload
     async def place_sell_listing(
-        self,
-        obj: int,
-        app_context: AppContext,
-        *,
-        price: int,
-        fetch: Literal[True] = ...,
-        confirm: bool = ...,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: int,
+            app_context: AppContext,
+            *,
+            price: int,
+            fetch: Literal[True] = ...,
+            confirm: bool = ...,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> MyMarketListing:
         ...
 
     @overload
     async def place_sell_listing(
-        self,
-        obj: int,
-        app_context: AppContext,
-        *,
-        to_receive: int,
-        fetch: Literal[True] = ...,
-        confirm: bool = ...,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: int,
+            app_context: AppContext,
+            *,
+            to_receive: int,
+            fetch: Literal[True] = ...,
+            confirm: bool = ...,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> MyMarketListing:
         ...
 
     async def place_sell_listing(
-        self,
-        obj: EconItem | int,
-        app_context: AppContext = None,
-        *,
-        price: int = None,
-        to_receive: int = None,
-        fetch=False,
-        confirm=True,
-        payload: T_PAYLOAD = {},
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            self,
+            obj: EconItem | int,
+            app_context: AppContext = None,
+            *,
+            price: int = None,
+            to_receive: int = None,
+            fetch=False,
+            confirm=True,
+            payload: T_PAYLOAD = {},
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
     ) -> int | MyMarketListing | None:
         """
         Create and place sell listing.
@@ -281,45 +279,45 @@ class MarketMixin(ConfirmationMixin, SteamCommunityPublicMixin):
 
     @overload
     async def get_my_sell_listing(
-        self,
-        obj: int = ...,
-        *,
-        price: int = ...,
-        need_confirmation: bool = ...,
-        asset_id: int = ...,
-        market_hash_name: str = ...,
-        ident_code: str = ...,
-        app_context: AppContext = ...,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
-        **listing_item_attrs,
+            self,
+            obj: int = ...,
+            *,
+            price: int = ...,
+            need_confirmation: bool = ...,
+            asset_id: int = ...,
+            market_hash_name: str = ...,
+            ident_code: str = ...,
+            app_context: AppContext = ...,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
+            **listing_item_attrs,
     ) -> MyMarketListing | None:
         ...
 
     @overload
     async def get_my_sell_listing(
-        self,
-        obj: Callable[[MyMarketListing], bool],
-        *,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: Callable[[MyMarketListing], bool],
+            *,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
     ) -> MyMarketListing | None:
         ...
 
     async def get_my_sell_listing(
-        self,
-        obj: int | Callable[[MyMarketListing], bool] = None,
-        *,
-        price: int = None,
-        need_confirmation: bool = False,
-        asset_id: int = None,
-        market_hash_name: str = None,
-        ident_code: str = None,
-        app_context: AppContext = None,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
-        **listing_item_attrs,
+            self,
+            obj: int | Callable[[MyMarketListing], bool] = None,
+            *,
+            price: int = None,
+            need_confirmation: bool = False,
+            asset_id: int = None,
+            market_hash_name: str = None,
+            ident_code: str = None,
+            app_context: AppContext = None,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            **listing_item_attrs,
     ) -> MyMarketListing | None:
         """
         Fetch and iterate over sell listings pages until find one that satisfies passed arguments.
@@ -364,19 +362,19 @@ class MarketMixin(ConfirmationMixin, SteamCommunityPublicMixin):
                 return True
 
         async for listings, to_confirm, _, _ in self.my_listings(
-            params=params,
-            headers=headers,
-            _item_descriptions_map=_item_descriptions_map,
+                params=params,
+                headers=headers,
+                _item_descriptions_map=_item_descriptions_map,
         ):
             with suppress(StopIteration):
                 return next(filter(predicate, to_confirm if need_confirmation else listings))
 
     def cancel_sell_listing(
-        self,
-        obj: MyMarketListing | int,
-        *,
-        payload: T_PAYLOAD = {},
-        headers: T_HEADERS = {},
+            self,
+            obj: MyMarketListing | int,
+            *,
+            payload: T_PAYLOAD = {},
+            headers: T_HEADERS = {},
     ) -> _RequestContextManager:
         """
         Simply cancel sell listing.
@@ -393,68 +391,68 @@ class MarketMixin(ConfirmationMixin, SteamCommunityPublicMixin):
 
     @overload
     async def place_buy_order(
-        self,
-        obj: ItemDescription,
-        *,
-        price: int,
-        quantity: int = ...,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: ItemDescription,
+            *,
+            price: int,
+            quantity: int = ...,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> int:
         ...
 
     @overload
     async def place_buy_order(
-        self,
-        obj: str,
-        app: App,
-        *,
-        price: int,
-        quantity: int = ...,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: str,
+            app: App,
+            *,
+            price: int,
+            quantity: int = ...,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> int:
         ...
 
     @overload
     async def place_buy_order(
-        self,
-        obj: ItemDescription,
-        *,
-        price: int,
-        quantity: int = ...,
-        fetch: Literal[True] = ...,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: ItemDescription,
+            *,
+            price: int,
+            quantity: int = ...,
+            fetch: Literal[True] = ...,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> BuyOrder:
         ...
 
     @overload
     async def place_buy_order(
-        self,
-        obj: str,
-        app: App,
-        *,
-        price: int,
-        quantity: int = ...,
-        fetch: Literal[True] = ...,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: str,
+            app: App,
+            *,
+            price: int,
+            quantity: int = ...,
+            fetch: Literal[True] = ...,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> BuyOrder:
         ...
 
     @currency_required
     async def place_buy_order(
-        self,
-        obj: str | ItemDescription,
-        app: App = None,
-        *,
-        price: int,
-        quantity=1,
-        fetch=False,
-        payload: T_PAYLOAD = {},
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            self,
+            obj: str | ItemDescription,
+            app: App = None,
+            *,
+            price: int,
+            quantity=1,
+            fetch=False,
+            payload: T_PAYLOAD = {},
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
     ) -> int | BuyOrder:
         """
         Place buy order on market.
@@ -500,43 +498,43 @@ class MarketMixin(ConfirmationMixin, SteamCommunityPublicMixin):
 
     @overload
     async def get_my_buy_order(
-        self,
-        obj: int = ...,
-        *,
-        price: int = ...,
-        quantity: int = ...,
-        market_hash_name: str = ...,
-        ident_code: str = ...,
-        app: App = ...,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
-        **item_description_attrs,
+            self,
+            obj: int = ...,
+            *,
+            price: int = ...,
+            quantity: int = ...,
+            market_hash_name: str = ...,
+            ident_code: str = ...,
+            app: App = ...,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
+            **item_description_attrs,
     ) -> BuyOrder | None:
         ...
 
     @overload
     async def get_my_buy_order(
-        self,
-        obj: Callable[[BuyOrder], bool],
-        *,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: Callable[[BuyOrder], bool],
+            *,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
     ) -> BuyOrder | None:
         ...
 
     async def get_my_buy_order(
-        self,
-        obj: int | Callable[[BuyOrder], bool] = None,
-        *,
-        price: int = None,
-        quantity: int = None,
-        market_hash_name: str = None,
-        ident_code: str = None,
-        app: App = None,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
-        **item_description_attrs,
+            self,
+            obj: int | Callable[[BuyOrder], bool] = None,
+            *,
+            price: int = None,
+            quantity: int = None,
+            market_hash_name: str = None,
+            ident_code: str = None,
+            app: App = None,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            **item_description_attrs,
     ) -> BuyOrder | None:
         """
         Fetch and iterate over buy order pages until find one that satisfies passed arguments.
@@ -612,13 +610,13 @@ class MarketMixin(ConfirmationMixin, SteamCommunityPublicMixin):
             raise EResultError(rj.get("message", "Failed to cancel buy order"), success, rj)
 
     async def get_my_listings(
-        self,
-        *,
-        start: int = 0,
-        count: int = 100,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            self,
+            *,
+            start: int = 0,
+            count: int = 100,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
     ) -> MY_LISTINGS_DATA:
         """
         Fetch users market listings.
@@ -660,13 +658,13 @@ class MarketMixin(ConfirmationMixin, SteamCommunityPublicMixin):
         return active, to_confirm, buy_orders, rj["num_active_listings"]
 
     async def my_listings(
-        self,
-        *,
-        start: int = 0,
-        count: int = 100,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            self,
+            *,
+            start: int = 0,
+            count: int = 100,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
     ) -> AsyncIterator[list[MyMarketListing]]:
         """
         Fetch users market listings. Return async iterator to paginate over listing pages.
@@ -703,9 +701,9 @@ class MarketMixin(ConfirmationMixin, SteamCommunityPublicMixin):
 
     @classmethod
     def _parse_item_descrs_from_my_listings(
-        cls,
-        data: dict[str, dict | list[dict]],
-        item_descrs_map: T_SHARED_DESCRIPTIONS,
+            cls,
+            data: dict[str, dict | list[dict]],
+            item_descrs_map: T_SHARED_DESCRIPTIONS,
     ):
         # assets field, has descriptions for listings, so we can not parse descrs from listings
         for app_id, app_data in (data["assets"] or {}).items():  # thanks Steam for an empty list instead of a dict
@@ -782,39 +780,39 @@ class MarketMixin(ConfirmationMixin, SteamCommunityPublicMixin):
 
     @overload
     async def buy_market_listing(
-        self,
-        obj: MarketListing,
-        *,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: MarketListing,
+            *,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> WalletInfo:
         ...
 
     @overload
     async def buy_market_listing(
-        self,
-        obj: int,
-        price: int,
-        market_hash_name: str,
-        app: App,
-        *,
-        fee: int = ...,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: int,
+            price: int,
+            market_hash_name: str,
+            app: App,
+            *,
+            fee: int = ...,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> WalletInfo:
         ...
 
     @currency_required
     async def buy_market_listing(
-        self,
-        obj: int | MarketListing,
-        price: int = None,
-        market_hash_name: str = None,
-        app: App = None,
-        *,
-        fee: int = None,
-        payload: T_PAYLOAD = {},
-        headers: T_HEADERS = {},
+            self,
+            obj: int | MarketListing,
+            price: int = None,
+            market_hash_name: str = None,
+            app: App = None,
+            *,
+            fee: int = None,
+            payload: T_PAYLOAD = {},
+            headers: T_HEADERS = {},
     ) -> WalletInfo:
         """
         Buy item listing from market.
@@ -886,15 +884,15 @@ class MarketMixin(ConfirmationMixin, SteamCommunityPublicMixin):
         return wallet_info
 
     async def get_my_market_history(
-        self,
-        *,
-        start: int = 0,
-        count: int = 100,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
-        _market_history_econ_items_map: dict[str, MarketHistoryListingItem] = None,
-        _market_history_listings_map: dict[int, MarketHistoryListing] = None,
+            self,
+            *,
+            start: int = 0,
+            count: int = 100,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            _market_history_econ_items_map: dict[str, MarketHistoryListingItem] = None,
+            _market_history_listings_map: dict[int, MarketHistoryListing] = None,
     ) -> MY_MARKET_HISTORY_DATA:
         """
         Fetch market history of self.
@@ -939,15 +937,15 @@ class MarketMixin(ConfirmationMixin, SteamCommunityPublicMixin):
         return self._parse_history_events(rj, _market_history_listings_map), rj["total_count"]
 
     async def my_market_history(
-        self,
-        *,
-        start: int = 0,
-        count: int = 100,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
-        _market_history_econ_items_map: dict[str, MarketHistoryListingItem] = None,
-        _market_history_listings_map: dict[int, MarketHistoryListing] = None,
+            self,
+            *,
+            start: int = 0,
+            count: int = 100,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            _market_history_econ_items_map: dict[str, MarketHistoryListingItem] = None,
+            _market_history_listings_map: dict[int, MarketHistoryListing] = None,
     ) -> AsyncIterator[MY_MARKET_HISTORY_DATA]:
         """
         Fetch market history of self. Return async iterator to paginate over history event pages.
@@ -987,9 +985,9 @@ class MarketMixin(ConfirmationMixin, SteamCommunityPublicMixin):
 
     @staticmethod
     def _parse_assets_for_history_listings(
-        data: dict[str, dict[str, dict[str, dict]]],
-        item_descrs_map: T_SHARED_DESCRIPTIONS,
-        econ_item_map: dict[str, MarketHistoryListingItem],
+            data: dict[str, dict[str, dict[str, dict]]],
+            item_descrs_map: T_SHARED_DESCRIPTIONS,
+            econ_item_map: dict[str, MarketHistoryListingItem],
     ):
         for app_id, app_data in data.items():
             for context_id, context_data in app_data.items():
@@ -1024,9 +1022,9 @@ class MarketMixin(ConfirmationMixin, SteamCommunityPublicMixin):
 
     @staticmethod
     def _parse_history_listings(
-        data: dict[str, dict[str, dict]],
-        econ_item_map: dict[str, MarketHistoryListingItem],
-        listings_map: dict[str, MarketHistoryListing],
+            data: dict[str, dict[str, dict]],
+            econ_item_map: dict[str, MarketHistoryListingItem],
+            listings_map: dict[str, MarketHistoryListing],
     ):
         for l_id, l_data in data["listings"].items():  # sell listings
             if l_id not in listings_map:
@@ -1074,8 +1072,8 @@ class MarketMixin(ConfirmationMixin, SteamCommunityPublicMixin):
 
     @staticmethod
     def _parse_history_events(
-        data: dict[str, list[dict] | dict[str, dict]],
-        listings_map: dict[str, MarketHistoryListing],
+            data: dict[str, list[dict] | dict[str, dict]],
+            listings_map: dict[str, MarketHistoryListing],
     ) -> list[MarketHistoryEvent]:
         events = []
         for e_data in data["events"]:
@@ -1095,32 +1093,32 @@ class MarketMixin(ConfirmationMixin, SteamCommunityPublicMixin):
 
     @overload
     async def fetch_price_history(
-        self,
-        obj: ItemDescription,
-        *,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: ItemDescription,
+            *,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
     ) -> list[PriceHistoryEntry]:
         ...
 
     @overload
     async def fetch_price_history(
-        self,
-        obj: str,
-        app: App,
-        *,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: str,
+            app: App,
+            *,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
     ) -> list[PriceHistoryEntry]:
         ...
 
     async def fetch_price_history(
-        self,
-        obj: str,
-        app: App = None,
-        *,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
+            self,
+            obj: str,
+            app: App | int = None,
+            *,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
     ) -> list[PriceHistoryEntry]:
         """
         Fetch price history.
@@ -1144,7 +1142,7 @@ class MarketMixin(ConfirmationMixin, SteamCommunityPublicMixin):
         else:  # str
             name = obj
 
-        params = {"appid": app.value, "market_hash_name": name, **params}
+        params = {"appid": app if isinstance(app, int) else app.value, "market_hash_name": name, **params}
         r = await self.session.get(STEAM_URL.MARKET / "pricehistory", params=params, headers=headers)
         rj: dict[str, list[list]] = await r.json()
         success = EResult(rj.get("success"))
