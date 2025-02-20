@@ -1,15 +1,13 @@
+from aiohttp import ClientResponseError
 from contextlib import suppress
-from typing import TypeAlias, overload, AsyncIterator, Literal, Callable, Sequence, Mapping
 from datetime import datetime
 from re import compile as re_compile
+from typing import TypeAlias, overload, AsyncIterator, Literal, Callable, Sequence, Mapping
 
-from aiohttp import ClientResponseError
-
+from .http import SteamHTTPTransportMixin
 from ..constants import STEAM_URL, App, AppContext, Currency, T_PARAMS, T_HEADERS, EResult
-from ..helpers import currency_required
-from ..typed import ItemOrdersHistogramData, ItemOrdersActivity, PriceOverview
 from ..exceptions import EResultError, SteamError, RateLimitExceeded, ResourceNotModified
-from ..utils import create_ident_code, find_item_nameid_in_text, parse_time, format_time, to_int_boolean
+from ..helpers import currency_required
 from ..models import (
     ItemDescriptionEntry,
     ItemTag,
@@ -24,8 +22,8 @@ from ..models import (
     OrderGraphEntry,
     MarketSearchItem,
 )
-from .http import SteamHTTPTransportMixin
-
+from ..typed import ItemOrdersHistogramData, ItemOrdersActivity, PriceOverview
+from ..utils import create_ident_code, find_item_nameid_in_text, parse_time, format_time, to_int_boolean
 
 # steam limit rules
 INV_COUNT = 5000
@@ -60,15 +58,15 @@ class SteamCommunityPublicMixin(SteamHTTPTransportMixin):
     country: str
 
     async def get_user_inventory(
-        self,
-        steam_id: int,
-        app_context: AppContext,
-        *,
-        last_assetid: int = None,
-        count=INV_COUNT,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            self,
+            steam_id: int,
+            app_context: AppContext,
+            *,
+            last_assetid: int = None,
+            count=INV_COUNT,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
     ) -> INV_ITEM_DATA:
         """
         Fetches inventory of user.
@@ -130,10 +128,10 @@ class SteamCommunityPublicMixin(SteamHTTPTransportMixin):
 
     @classmethod
     def _parse_inventory(
-        cls,
-        data: dict[str, list[dict]],
-        steam_id: int,
-        descrs_map: dict[str, ItemDescription],
+            cls,
+            data: dict[str, list[dict]],
+            steam_id: int,
+            descrs_map: dict[str, ItemDescription],
     ) -> list[EconItem]:
         for d_data in data["descriptions"]:
             key = create_ident_code(d_data["instanceid"], d_data["classid"], d_data["appid"])
@@ -209,15 +207,15 @@ class SteamCommunityPublicMixin(SteamHTTPTransportMixin):
         )
 
     async def user_inventory(
-        self,
-        steam_id: int,
-        app_context: AppContext,
-        *,
-        last_assetid: int = None,
-        count=INV_COUNT,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            self,
+            steam_id: int,
+            app_context: AppContext,
+            *,
+            last_assetid: int = None,
+            count=INV_COUNT,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
     ) -> AsyncIterator[INV_ITEM_DATA]:
         """
         Fetches inventory of user. Return async iterator to paginate over inventory pages.
@@ -260,40 +258,40 @@ class SteamCommunityPublicMixin(SteamHTTPTransportMixin):
 
     @overload
     async def get_user_inventory_item(
-        self,
-        steam_id: int,
-        app_context: AppContext,
-        obj: int = ...,
-        *,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
-        **item_attrs,
+            self,
+            steam_id: int,
+            app_context: AppContext,
+            obj: int = ...,
+            *,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
+            **item_attrs,
     ) -> EconItem | None:
         ...
 
     @overload
     async def get_user_inventory_item(
-        self,
-        steam_id: int,
-        app_context: AppContext,
-        obj: Callable[[EconItem], bool],
-        *,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
+            self,
+            steam_id: int,
+            app_context: AppContext,
+            obj: Callable[[EconItem], bool],
+            *,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
     ) -> EconItem | None:
         ...
 
     # TODO start_assetid param to find specified asset id
     async def get_user_inventory_item(
-        self,
-        steam_id: int,
-        app_context: AppContext,
-        obj: int | Callable[[EconItem], bool] = None,
-        *,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
-        **item_attrs,
+            self,
+            steam_id: int,
+            app_context: AppContext,
+            obj: int | Callable[[EconItem], bool] = None,
+            *,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            **item_attrs,
     ) -> EconItem | None:
         """
         Fetch and iterate over inventory item pages of user until find one that satisfies passed arguments.
@@ -328,47 +326,47 @@ class SteamCommunityPublicMixin(SteamHTTPTransportMixin):
             _item_descriptions_map = {}
 
         async for data in self.user_inventory(
-            steam_id,
-            app_context,
-            params=params,
-            headers=headers,
-            _item_descriptions_map=_item_descriptions_map,
+                steam_id,
+                app_context,
+                params=params,
+                headers=headers,
+                _item_descriptions_map=_item_descriptions_map,
         ):
             with suppress(StopIteration):
                 return next(filter(predicate, data[0]))
 
     @overload
     async def get_item_orders_histogram(
-        self,
-        item_nameid: int,
-        *,
-        if_modified_since: datetime | str = ...,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
+            self,
+            item_nameid: int,
+            *,
+            if_modified_since: datetime | str = ...,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
     ) -> tuple[ItemOrdersHistogram, datetime]:
         ...
 
     @overload
     async def get_item_orders_histogram(
-        self,
-        item_nameid: int,
-        *,
-        raw: Literal[True] = ...,
-        if_modified_since: datetime | str = ...,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
+            self,
+            item_nameid: int,
+            *,
+            raw: Literal[True] = ...,
+            if_modified_since: datetime | str = ...,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
     ) -> tuple[ItemOrdersHistogramData, datetime]:
         ...
 
     @currency_required
     async def get_item_orders_histogram(
-        self,
-        item_nameid: int,
-        *,
-        raw: bool = False,
-        if_modified_since: datetime | str = None,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
+            self,
+            item_nameid: int,
+            *,
+            raw: bool = False,
+            if_modified_since: datetime | str = None,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
     ) -> tuple[ItemOrdersHistogramData | ItemOrdersHistogram, datetime]:
         """
         Do what described in method name.
@@ -485,11 +483,11 @@ class SteamCommunityPublicMixin(SteamHTTPTransportMixin):
 
     @currency_required
     async def fetch_item_orders_activity(
-        self,
-        item_nameid: int,
-        *,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
+            self,
+            item_nameid: int,
+            *,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
     ) -> ItemOrdersActivity:
         """
         Do what described in method name.
@@ -524,33 +522,35 @@ class SteamCommunityPublicMixin(SteamHTTPTransportMixin):
 
     @overload
     async def fetch_price_overview(
-        self,
-        obj: ItemDescription,
-        *,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: ItemDescription,
+            *,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
     ) -> PriceOverview:
         ...
 
     @overload
     async def fetch_price_overview(
-        self,
-        obj: str,
-        app: App,
-        *,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: str,
+            app: App,
+            *,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
     ) -> PriceOverview:
         ...
 
     @currency_required
     async def fetch_price_overview(
-        self,
-        obj: str | ItemDescription,
-        app: App = None,
-        *,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
+            self,
+            obj: str | ItemDescription,
+            app: App = None,
+            *,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
+            currency: Optional[Currency.value] = None,
+            country: Optional[str] = None
     ) -> PriceOverview:
         """
         Fetch price data.
@@ -561,6 +561,8 @@ class SteamCommunityPublicMixin(SteamHTTPTransportMixin):
         :param app:
         :param params: extra params to pass to url
         :param headers: extra headers to send with request
+        :param currency: currency code
+        :param country: country code
         :return: `PriceOverview` dict
         :raises EResultError:
         """
@@ -572,8 +574,8 @@ class SteamCommunityPublicMixin(SteamHTTPTransportMixin):
             name = obj
 
         params = {
-            "country": self.country,
-            "currency": self.currency,
+            "country": self.country if currency is None else currency,
+            "currency": self.currency if country is None else country,
             "market_hash_name": name,
             "appid": app.value,
             **params,
@@ -595,47 +597,47 @@ class SteamCommunityPublicMixin(SteamHTTPTransportMixin):
 
     @overload
     async def get_item_listings(
-        self,
-        obj: ItemDescription,
-        *,
-        query: str = ...,
-        start: int = ...,
-        count: int = ...,
-        if_modified_since: datetime | str = ...,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: ItemDescription,
+            *,
+            query: str = ...,
+            start: int = ...,
+            count: int = ...,
+            if_modified_since: datetime | str = ...,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
     ) -> T_MARKET_ITEM_LISTINGS_DATA:
         ...
 
     @overload
     async def get_item_listings(
-        self,
-        obj: str,
-        app: App,
-        *,
-        query: str = ...,
-        start: int = ...,
-        count: int = ...,
-        if_modified_since: datetime | str = ...,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: str,
+            app: App,
+            *,
+            query: str = ...,
+            start: int = ...,
+            count: int = ...,
+            if_modified_since: datetime | str = ...,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
     ) -> T_MARKET_ITEM_LISTINGS_DATA:
         ...
 
     @currency_required
     async def get_item_listings(
-        self,
-        obj: str | ItemDescription,
-        app: App = None,
-        *,
-        query: str = "",
-        start: int = 0,
-        count: int = LISTING_COUNT,
-        if_modified_since: datetime | str = None,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
-        _market_econ_items_map: dict[str, MarketListingItem] = None,
+            self,
+            obj: str | ItemDescription,
+            app: App = None,
+            *,
+            query: str = "",
+            start: int = 0,
+            count: int = LISTING_COUNT,
+            if_modified_since: datetime | str = None,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            _market_econ_items_map: dict[str, MarketListingItem] = None,
     ) -> T_MARKET_ITEM_LISTINGS_DATA:
         """
         Fetch item listings from market.
@@ -742,9 +744,9 @@ class SteamCommunityPublicMixin(SteamHTTPTransportMixin):
 
     @classmethod
     def _parse_descriptions_from_market_assets(
-        cls,
-        assets: dict[str, dict[str, dict[str, dict]]],
-        item_descriptions_map: dict[str, ItemDescription],
+            cls,
+            assets: dict[str, dict[str, dict[str, dict]]],
+            item_descriptions_map: dict[str, ItemDescription],
     ):
         for app_id, app_data in assets.items():
             for context_id, context_data in app_data.items():
@@ -754,9 +756,9 @@ class SteamCommunityPublicMixin(SteamHTTPTransportMixin):
 
     @staticmethod
     def _parse_market_listing_items(
-        data: dict[str, dict[str, dict[str, dict]]],
-        item_descriptions_map: dict[str, ItemDescription],
-        items_map: dict[str, MarketListingItem],
+            data: dict[str, dict[str, dict[str, dict]]],
+            item_descriptions_map: dict[str, ItemDescription],
+            items_map: dict[str, MarketListingItem],
     ):
         for app_id, app_data in data.items():
             for context_id, context_data in app_data.items():
@@ -781,46 +783,46 @@ class SteamCommunityPublicMixin(SteamHTTPTransportMixin):
     # without async for proper type hinting in VsCode and PyCharm at least with `async for`
     @overload
     def market_listings(
-        self,
-        obj: ItemDescription,
-        *,
-        query: str = ...,
-        start: int = ...,
-        count: int = ...,
-        if_modified_since: datetime | str = ...,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: ItemDescription,
+            *,
+            query: str = ...,
+            start: int = ...,
+            count: int = ...,
+            if_modified_since: datetime | str = ...,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
     ) -> AsyncIterator[T_MARKET_ITEM_LISTINGS_DATA]:
         ...
 
     @overload
     def market_listings(
-        self,
-        obj: str,
-        app: App,
-        *,
-        query: str = ...,
-        start: int = ...,
-        count: int = ...,
-        if_modified_since: datetime | str = ...,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: str,
+            app: App,
+            *,
+            query: str = ...,
+            start: int = ...,
+            count: int = ...,
+            if_modified_since: datetime | str = ...,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
     ) -> AsyncIterator[T_MARKET_ITEM_LISTINGS_DATA]:
         ...
 
     async def market_listings(
-        self,
-        obj: str | ItemDescription,
-        app: App = None,
-        *,
-        query: str = "",
-        start: int = 0,
-        count: int = LISTING_COUNT,
-        if_modified_since: datetime | str = None,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
-        _market_econ_items_map: dict[str, MarketListingItem] = None,
+            self,
+            obj: str | ItemDescription,
+            app: App = None,
+            *,
+            query: str = "",
+            start: int = 0,
+            count: int = LISTING_COUNT,
+            if_modified_since: datetime | str = None,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            _market_econ_items_map: dict[str, MarketListingItem] = None,
     ) -> AsyncIterator[T_MARKET_ITEM_LISTINGS_DATA]:
         """
         Fetch item listings from market. Return async iterator to paginate over listings pages.
@@ -923,18 +925,18 @@ class SteamCommunityPublicMixin(SteamHTTPTransportMixin):
         return rj
 
     async def get_market_search_results(
-        self,
-        query="",
-        app: App = None,
-        *,
-        start=0,
-        count=10,
-        descriptions=False,
-        sort_column: T_SORT_COLUMN = "default",
-        sort_dir: T_SORT_DIR = "desc",
-        filters: str | Mapping[str, str | Sequence[str]] = "",
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            self,
+            query="",
+            app: App = None,
+            *,
+            start=0,
+            count=10,
+            descriptions=False,
+            sort_column: T_SORT_COLUMN = "default",
+            sort_dir: T_SORT_DIR = "desc",
+            filters: str | Mapping[str, str | Sequence[str]] = "",
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
     ) -> tuple[list[MarketSearchItem], int]:
         """
         Request search results from `Steam` for market.
@@ -1033,18 +1035,18 @@ class SteamCommunityPublicMixin(SteamHTTPTransportMixin):
         return items, rj["total_count"]
 
     async def market_search_results(
-        self,
-        query="",
-        app: App = None,
-        *,
-        start=0,
-        count=10,
-        descriptions=False,
-        sort_column: T_SORT_COLUMN = "default",
-        sort_dir: T_SORT_DIR = "desc",
-        filters: str | Mapping[str, str | Sequence[str]] = "",
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            self,
+            query="",
+            app: App = None,
+            *,
+            start=0,
+            count=10,
+            descriptions=False,
+            sort_column: T_SORT_COLUMN = "default",
+            sort_dir: T_SORT_DIR = "desc",
+            filters: str | Mapping[str, str | Sequence[str]] = "",
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
     ) -> AsyncIterator[tuple[list[MarketSearchItem], int]]:
         """
         Request search results from `Steam` for market.
