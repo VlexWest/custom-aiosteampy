@@ -609,6 +609,32 @@ class MarketMixin(ConfirmationMixin, SteamCommunityPublicMixin):
         if success is not EResult.OK:
             raise EResultError(rj.get("message", "Failed to cancel buy order"), success, rj)
 
+    async def get_market_listings(
+            self,
+            app: App,
+            start_from: int = 1000,
+            country: str = 'PL'
+    ) -> dict:
+        """
+        Get market listings for a specific app.
+
+        :param app: `Steam` app
+        :param start_from: start from index
+        :param country: country code
+        """
+
+        params = {
+            "country": country,
+            "appid": app.value
+        }
+        r = await self.session.get(
+            f"{STEAM_URL.MARKET}search/render/?query=&appid={app.app_id}&norender=1&count=100&sort_column=price&sort_dir=asc&start={start_from}&l=english",
+            params=params
+        )
+        rj = await r.json()
+        listings = rj["results"]
+        return listings
+
     async def get_my_listings(
             self,
             *,
