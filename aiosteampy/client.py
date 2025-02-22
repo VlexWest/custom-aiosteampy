@@ -1,21 +1,18 @@
-from re import search as re_search
-from json import loads
-from typing import AsyncIterator, overload, Callable, final, TYPE_CHECKING
-
 from aiohttp import ClientSession
 from aiohttp.client import _RequestContextManager
+from json import loads
+from re import search as re_search
+from typing import AsyncIterator, overload, Callable, final, TYPE_CHECKING
 
 from .constants import STEAM_URL, Currency, AppContext, Language, T_PARAMS, T_HEADERS, EResult
-from .typed import WalletInfo, FundWalletInfo
 from .exceptions import EResultError, SessionExpired, SteamError
-from .utils import account_id_to_steam_id, generate_device_id
-from .models import Notifications, EconItem
-
-from .mixins.public import SteamCommunityPublicMixin, INV_COUNT, INV_ITEM_DATA, T_SHARED_DESCRIPTIONS
-from .mixins.profile import ProfileMixin
-from .mixins.trade import TradeMixin
 from .mixins.market import MarketMixin
-
+from .mixins.profile import ProfileMixin
+from .mixins.public import SteamCommunityPublicMixin, INV_COUNT, INV_ITEM_DATA, T_SHARED_DESCRIPTIONS
+from .mixins.trade import TradeMixin
+from .models import Notifications, EconItem
+from .typed import WalletInfo, FundWalletInfo
+from .utils import account_id_to_steam_id, generate_device_id
 
 DEF_COUNTRY = "UA"
 DEF_TZ_OFFSET = "10800,0"
@@ -28,40 +25,40 @@ class SteamPublicClientBase(SteamCommunityPublicMixin):
 
     @overload
     def __init__(
-        self,
-        *,
-        language: Language = ...,
-        tz_offset: str = ...,
-        currency: Currency = ...,
-        country: str = ...,
-        session: ClientSession = ...,
-        user_agent: str = ...,
+            self,
+            *,
+            language: Language = ...,
+            tz_offset: str = ...,
+            currency: Currency = ...,
+            country: str = ...,
+            session: ClientSession = ...,
+            user_agent: str = ...,
     ):
         ...
 
     @overload
     def __init__(
-        self,
-        *,
-        language: Language = ...,
-        tz_offset: str = ...,
-        currency: Currency = ...,
-        country: str = ...,
-        proxy: str = ...,
-        user_agent: str = ...,
+            self,
+            *,
+            language: Language = ...,
+            tz_offset: str = ...,
+            currency: Currency = ...,
+            country: str = ...,
+            proxy: str = ...,
+            user_agent: str = ...,
     ):
         ...
 
     def __init__(
-        self,
-        *,
-        language=Language.ENGLISH,
-        tz_offset=DEF_TZ_OFFSET,
-        currency=Currency.USD,
-        country=DEF_COUNTRY,
-        session: ClientSession = None,
-        proxy: str = None,
-        user_agent: str = None,
+            self,
+            *,
+            language=Language.ENGLISH,
+            tz_offset=DEF_TZ_OFFSET,
+            currency=Currency.USD,
+            country=DEF_COUNTRY,
+            session: ClientSession = None,
+            proxy: str = None,
+            user_agent: str = None,
     ):
         """
         Base `Steam Public Community` client class.
@@ -109,69 +106,69 @@ class SteamClientBase(SteamPublicClientBase, ProfileMixin, MarketMixin, TradeMix
 
     @overload
     def __init__(
-        self,
-        steam_id: int,
-        username: str,
-        password: str,
-        shared_secret: str,
-        identity_secret: str = ...,
-        *,
-        access_token: str = ...,
-        refresh_token: str = ...,
-        api_key: str = ...,
-        trade_token: str = ...,
-        language: Language = ...,
-        wallet_currency: Currency = ...,
-        wallet_country: str = ...,
-        tz_offset: str = ...,
-        session: ClientSession = ...,
-        user_agent: str = ...,
+            self,
+            steam_id: int,
+            username: str,
+            password: str,
+            shared_secret: str,
+            identity_secret: str = ...,
+            *,
+            access_token: str = ...,
+            refresh_token: str = ...,
+            api_key: str = ...,
+            trade_token: str = ...,
+            language: Language = ...,
+            wallet_currency: Currency = ...,
+            wallet_country: str = ...,
+            tz_offset: str = ...,
+            session: ClientSession = ...,
+            user_agent: str = ...,
     ):
         ...
 
     @overload
     def __init__(
-        self,
-        steam_id: int,
-        username: str,
-        password: str,
-        shared_secret: str,
-        identity_secret: str = ...,
-        *,
-        access_token: str = ...,
-        refresh_token: str = ...,
-        api_key: str = ...,
-        trade_token: str = ...,
-        language: Language = ...,
-        wallet_currency: Currency = ...,
-        wallet_country: str = ...,
-        tz_offset: str = ...,
-        proxy: str = ...,
-        user_agent: str = ...,
+            self,
+            steam_id: int,
+            username: str,
+            password: str,
+            shared_secret: str,
+            identity_secret: str = ...,
+            *,
+            access_token: str = ...,
+            refresh_token: str = ...,
+            api_key: str = ...,
+            trade_token: str = ...,
+            language: Language = ...,
+            wallet_currency: Currency = ...,
+            wallet_country: str = ...,
+            tz_offset: str = ...,
+            proxy: str = ...,
+            user_agent: str = ...,
     ):
         ...
 
     def __init__(
-        self,
-        # It is possible to get steam id from the cookie and then arg will not be necessary,
-        # but typical use case of the library means that the user already knows the steam id
-        steam_id: int,  # first as intend to be mandatory
-        username: str,
-        password: str,
-        shared_secret: str,
-        identity_secret: str = None,
-        *,
-        access_token: str = None,
-        refresh_token: str = None,
-        api_key: str = None,
-        trade_token: str = None,
-        language=Language.ENGLISH,
-        wallet_currency: Currency = None,
-        wallet_country=DEF_COUNTRY,
-        tz_offset=DEF_TZ_OFFSET,
-        session: ClientSession = None,
-        proxy: str = None,
-        user_agent: str = None,
+            self,
+            # It is possible to get steam id from the cookie and then arg will not be necessary,
+            # but typical use case of the library means that the user already knows the steam id
+            steam_id: int,  # first as intend to be mandatory
+            username: str,
+            password: str,
+            shared_secret: str,
+            identity_secret: str = None,
+            *,
+            access_token: str = None,
+            refresh_token: str = None,
+            api_key: str = None,
+            trade_token: str = None,
+            language=Language.ENGLISH,
+            wallet_currency: Currency = None,
+            wallet_country=DEF_COUNTRY,
+            tz_offset=DEF_TZ_OFFSET,
+            session: ClientSession = None,
+            proxy: str = None,
+            user_agent: str = None,
     ):
         """
         Base `Steam Community` client class.
@@ -264,11 +261,43 @@ class SteamClientBase(SteamPublicClientBase, ProfileMixin, MarketMixin, TradeMix
         # avoid unnecessary privacy editing
         profile_data = await self.get_profile_data()
         if (
-            profile_data["Privacy"]["PrivacySettings"]["PrivacyInventory"] != 3
-            or profile_data["Privacy"]["PrivacySettings"]["PrivacyInventoryGifts"] != 3
-            or profile_data["Privacy"]["PrivacySettings"]["PrivacyProfile"] != 3
+                profile_data["Privacy"]["PrivacySettings"]["PrivacyInventory"] != 3
+                or profile_data["Privacy"]["PrivacySettings"]["PrivacyInventoryGifts"] != 3
+                or profile_data["Privacy"]["PrivacySettings"]["PrivacyProfile"] != 3
         ):
             await self.edit_privacy_settings(inventory=3, inventory_gifts=True, profile=3)
+
+    async def activate_wallet_code(self, code: str) -> dict:
+        data = {
+            'wallet_code': code,
+            'sessionid': self.session_id,
+        }
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0",
+            "Accept": "text/javascript, text/html, application/xml, text/xml, */*",
+            # "Accept-Language": "en-US,en;q=0.5",
+            # "Accept-Encoding": "gzip, deflate, br, zstd",
+            # "X-Requested-With": "XMLHttpRequest",
+            # "X-Prototype-Version": "1.7",
+            "Content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "X-KL-Ajax-Request": "Ajax_Request",
+            "Origin": str(STEAM_URL.STORE),
+            "Connection": "keep-alive",
+            "Referer": f"{STEAM_URL.STORE}/account/redeemwalletcode",
+        }
+
+        cookies = {
+            'sessionid': self.session_id,
+            "timezoneOffset": "3600,0",
+        }
+
+        response = await self.session.post(
+            f'{STEAM_URL.STORE}/account/ajaxredeemwalletcode/',
+            data=data,
+            headers=headers,
+            cookies=cookies
+        )
+        return await response.json()
 
     async def get_wallet_info(self) -> WalletInfo:
         """
@@ -336,14 +365,14 @@ class SteamClientBase(SteamPublicClientBase, ProfileMixin, MarketMixin, TradeMix
         return self.session.get(self.profile_url / "inventory/")
 
     async def get_inventory(
-        self,
-        app_context: AppContext,
-        *,
-        last_assetid: int = None,
-        count=INV_COUNT,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            self,
+            app_context: AppContext,
+            *,
+            last_assetid: int = None,
+            count=INV_COUNT,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
     ) -> INV_ITEM_DATA:
         """
         Fetches self inventory.
@@ -380,14 +409,14 @@ class SteamClientBase(SteamPublicClientBase, ProfileMixin, MarketMixin, TradeMix
                 raise e
 
     def inventory(
-        self,
-        app_context: AppContext,
-        *,
-        last_assetid: int = None,
-        count=INV_COUNT,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            self,
+            app_context: AppContext,
+            *,
+            last_assetid: int = None,
+            count=INV_COUNT,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
     ) -> AsyncIterator[INV_ITEM_DATA]:
         """
         Fetches self inventory. Return async iterator to paginate over inventory pages.
@@ -417,36 +446,36 @@ class SteamClientBase(SteamPublicClientBase, ProfileMixin, MarketMixin, TradeMix
 
     @overload
     async def get_inventory_item(
-        self,
-        app_context: AppContext,
-        obj: int = ...,
-        *,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
-        **item_attrs,
+            self,
+            app_context: AppContext,
+            obj: int = ...,
+            *,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
+            **item_attrs,
     ) -> EconItem | None:
         ...
 
     @overload
     async def get_inventory_item(
-        self,
-        app_context: AppContext,
-        obj: Callable[[EconItem], bool],
-        *,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
+            self,
+            app_context: AppContext,
+            obj: Callable[[EconItem], bool],
+            *,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
     ) -> EconItem | None:
         ...
 
     async def get_inventory_item(
-        self,
-        app_context: AppContext,
-        obj: int | Callable[[EconItem], bool] = None,
-        *,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
-        **item_attrs,
+            self,
+            app_context: AppContext,
+            obj: int | Callable[[EconItem], bool] = None,
+            *,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            **item_attrs,
     ) -> EconItem | None:
         """
         Fetch and iterate over inventory item pages of self until find one that satisfies passed arguments.
@@ -490,67 +519,67 @@ class SteamClient(SteamClientBase):
 
         @overload
         def __init__(
-            self,
-            steam_id: int,
-            username: str,
-            password: str,
-            shared_secret: str,
-            identity_secret: str = ...,
-            *,
-            access_token: str = ...,
-            refresh_token: str = ...,
-            api_key: str = ...,
-            trade_token: str = ...,
-            language: Language = ...,
-            wallet_currency: Currency = ...,
-            wallet_country: str = ...,
-            tz_offset: str = ...,
-            session: ClientSession = ...,
-            user_agent: str = ...,
+                self,
+                steam_id: int,
+                username: str,
+                password: str,
+                shared_secret: str,
+                identity_secret: str = ...,
+                *,
+                access_token: str = ...,
+                refresh_token: str = ...,
+                api_key: str = ...,
+                trade_token: str = ...,
+                language: Language = ...,
+                wallet_currency: Currency = ...,
+                wallet_country: str = ...,
+                tz_offset: str = ...,
+                session: ClientSession = ...,
+                user_agent: str = ...,
         ):
             ...
 
         @overload
         def __init__(
-            self,
-            steam_id: int,
-            username: str,
-            password: str,
-            shared_secret: str,
-            identity_secret: str = ...,
-            *,
-            access_token: str = ...,
-            refresh_token: str = ...,
-            api_key: str = ...,
-            trade_token: str = ...,
-            language: Language = ...,
-            wallet_currency: Currency = ...,
-            wallet_country: str = ...,
-            tz_offset: str = ...,
-            proxy: str = ...,
-            user_agent: str = ...,
+                self,
+                steam_id: int,
+                username: str,
+                password: str,
+                shared_secret: str,
+                identity_secret: str = ...,
+                *,
+                access_token: str = ...,
+                refresh_token: str = ...,
+                api_key: str = ...,
+                trade_token: str = ...,
+                language: Language = ...,
+                wallet_currency: Currency = ...,
+                wallet_country: str = ...,
+                tz_offset: str = ...,
+                proxy: str = ...,
+                user_agent: str = ...,
         ):
             ...
 
         def __init__(
-            self,
-            steam_id: int,
-            username: str,
-            password: str,
-            shared_secret: str,
-            identity_secret: str = None,
-            *,
-            access_token: str = None,
-            refresh_token: str = None,
-            api_key: str = None,
-            trade_token: str = None,
-            language=Language.ENGLISH,
-            wallet_currency: Currency = None,
-            wallet_country=DEF_COUNTRY,
-            tz_offset=DEF_TZ_OFFSET,
-            session: ClientSession = None,
-            proxy: str = None,
-            user_agent: str = None,
+                self,
+                steam_id: int,
+                username: str,
+                password: str,
+                shared_secret: str,
+                identity_secret: str = None,
+                *,
+                access_token: str = None,
+                refresh_token: str = None,
+                api_key: str = None,
+                trade_token: str = None,
+                language=Language.ENGLISH,
+                wallet_currency: Currency = None,
+                wallet_country=DEF_COUNTRY,
+                tz_offset=DEF_TZ_OFFSET,
+                session: ClientSession = None,
+                proxy: str = None,
+                user_agent: str = None,
         ):
             """
             Ready to use client class with inherited methods from all mixins. Must be logged in.
@@ -582,40 +611,40 @@ class SteamPublicClient(SteamPublicClientBase):
 
         @overload
         def __init__(
-            self,
-            *,
-            language: Language = ...,
-            tz_offset: str = ...,
-            currency: Currency = ...,
-            country: str = ...,
-            session: ClientSession = ...,
-            user_agent: str = ...,
+                self,
+                *,
+                language: Language = ...,
+                tz_offset: str = ...,
+                currency: Currency = ...,
+                country: str = ...,
+                session: ClientSession = ...,
+                user_agent: str = ...,
         ):
             ...
 
         @overload
         def __init__(
-            self,
-            *,
-            language: Language = ...,
-            tz_offset: str = ...,
-            currency: Currency = ...,
-            country: str = ...,
-            proxy: str = ...,
-            user_agent: str = ...,
+                self,
+                *,
+                language: Language = ...,
+                tz_offset: str = ...,
+                currency: Currency = ...,
+                country: str = ...,
+                proxy: str = ...,
+                user_agent: str = ...,
         ):
             ...
 
         def __init__(
-            self,
-            *,
-            language=Language.ENGLISH,
-            tz_offset=DEF_TZ_OFFSET,
-            currency=Currency.USD,
-            country=DEF_COUNTRY,
-            session: ClientSession = None,
-            proxy: str = None,
-            user_agent: str = None,
+                self,
+                *,
+                language=Language.ENGLISH,
+                tz_offset=DEF_TZ_OFFSET,
+                currency=Currency.USD,
+                country=DEF_COUNTRY,
+                session: ClientSession = None,
+                proxy: str = None,
+                user_agent: str = None,
         ):
             """
             Client contains public methods that do not require authentication.
