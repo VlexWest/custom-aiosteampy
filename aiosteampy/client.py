@@ -275,10 +275,6 @@ class SteamClientBase(SteamPublicClientBase, ProfileMixin, MarketMixin, TradeMix
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0",
             "Accept": "text/javascript, text/html, application/xml, text/xml, */*",
-            # "Accept-Language": "en-US,en;q=0.5",
-            # "Accept-Encoding": "gzip, deflate, br, zstd",
-            # "X-Requested-With": "XMLHttpRequest",
-            # "X-Prototype-Version": "1.7",
             "Content-type": "application/x-www-form-urlencoded; charset=UTF-8",
             "X-KL-Ajax-Request": "Ajax_Request",
             "Origin": str(STEAM_URL.STORE),
