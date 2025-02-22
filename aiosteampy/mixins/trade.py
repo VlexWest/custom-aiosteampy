@@ -1,10 +1,10 @@
-from typing import overload, Literal, TypeAlias, Sequence, AsyncIterator
 from datetime import datetime
 from json import dumps as jdumps
-
+from typing import overload, Literal, TypeAlias, Sequence, AsyncIterator
 from yarl import URL
 
-from ..typed import TradeOffersSummary
+from .public import SteamCommunityPublicMixin, T_SHARED_DESCRIPTIONS
+from .web_api import SteamWebApiMixin
 from ..constants import STEAM_URL, CORO, T_HEADERS, T_PARAMS, T_PAYLOAD, AppContext, App
 from ..exceptions import EResultError, SteamError
 from ..models import (
@@ -15,9 +15,8 @@ from ..models import (
     HistoryTradeOfferItem,
     EconItem,
 )
+from ..typed import TradeOffersSummary
 from ..utils import create_ident_code, to_int_boolean, steam_id_to_account_id, account_id_to_steam_id
-from .public import SteamCommunityPublicMixin, T_SHARED_DESCRIPTIONS
-from .web_api import SteamWebApiMixin
 
 T_TRADE_OFFERS_DATA: TypeAlias = tuple[list[TradeOffer], list[TradeOffer], int]
 
@@ -31,12 +30,12 @@ class TradeMixin(SteamWebApiMixin, SteamCommunityPublicMixin):
     __slots__ = ()
 
     async def get_trade_offer(
-        self,
-        offer_id: int,
-        *,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            self,
+            offer_id: int,
+            *,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
     ) -> TradeOffer:
         """
         Fetch trade offer from Steam.
@@ -64,7 +63,24 @@ class TradeMixin(SteamWebApiMixin, SteamCommunityPublicMixin):
         if _item_descriptions_map is None:
             _item_descriptions_map = {}
 
-        self._update_item_descrs_map_from_trades(data["descriptions"], _item_descriptions_map)
+        try:
+            self._update_item_descrs_map_from_trades(data["descriptions"], _item_descriptions_map)
+        except Exception as e:
+            data = data['offer']
+            trade_offer = TradeOffer(
+                id=offer_id,
+                owner_id=self.steam_id,
+                partner_id=data["accountid_other"],
+                is_our_offer=data["is_our_offer"],
+                expiration_time=datetime.fromtimestamp(data["expiration_time"]),
+                time_created=datetime.fromtimestamp(data["time_created"]),
+                time_updated=datetime.fromtimestamp(data["time_updated"]),
+                items_to_give=self._parse_items_for_trade(data.get("items_to_give", ()), _item_descriptions_map),
+                items_to_receive=self._parse_items_for_trade(data.get("items_to_receive", ()), _item_descriptions_map),
+                message=data["message"],
+                status=TradeOfferStatus(data["trade_offer_state"])
+            )
+            return trade_offer
 
         return self._create_trade_offer(data["offer"], _item_descriptions_map)
 
@@ -112,42 +128,42 @@ class TradeMixin(SteamWebApiMixin, SteamCommunityPublicMixin):
 
     @overload
     async def get_trade_offers(
-        self,
-        *,
-        time_historical_cutoff: int | datetime = ...,
-        sent: bool = ...,
-        received: bool = ...,
-        cursor: int = ...,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
+            self,
+            *,
+            time_historical_cutoff: int | datetime = ...,
+            sent: bool = ...,
+            received: bool = ...,
+            cursor: int = ...,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
     ) -> T_TRADE_OFFERS_DATA:
         ...
 
     @overload
     async def get_trade_offers(
-        self,
-        *,
-        historical_only: Literal[True] = ...,
-        sent: bool = ...,
-        received: bool = ...,
-        cursor: int = ...,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
+            self,
+            *,
+            historical_only: Literal[True] = ...,
+            sent: bool = ...,
+            received: bool = ...,
+            cursor: int = ...,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
     ) -> T_TRADE_OFFERS_DATA:
         ...
 
     async def get_trade_offers(
-        self,
-        *,
-        active_only=True,
-        time_historical_cutoff: int | datetime = None,
-        historical_only=False,
-        sent=True,
-        received=True,
-        cursor=0,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            self,
+            *,
+            active_only=True,
+            time_historical_cutoff: int | datetime = None,
+            historical_only=False,
+            sent=True,
+            received=True,
+            cursor=0,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
     ) -> T_TRADE_OFFERS_DATA:
         """
         Fetch trade offers from `Steam Web Api`.
@@ -212,42 +228,42 @@ class TradeMixin(SteamWebApiMixin, SteamCommunityPublicMixin):
 
     @overload
     async def trade_offers(
-        self,
-        *,
-        time_historical_cutoff: int | datetime = ...,
-        sent: bool = ...,
-        received: bool = ...,
-        cursor: int = ...,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
+            self,
+            *,
+            time_historical_cutoff: int | datetime = ...,
+            sent: bool = ...,
+            received: bool = ...,
+            cursor: int = ...,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
     ) -> AsyncIterator[T_TRADE_OFFERS_DATA]:
         ...
 
     @overload
     async def trade_offers(
-        self,
-        *,
-        historical_only: Literal[True] = ...,
-        sent: bool = ...,
-        received: bool = ...,
-        cursor: int = ...,
-        params: T_PARAMS = ...,
-        headers: T_HEADERS = ...,
+            self,
+            *,
+            historical_only: Literal[True] = ...,
+            sent: bool = ...,
+            received: bool = ...,
+            cursor: int = ...,
+            params: T_PARAMS = ...,
+            headers: T_HEADERS = ...,
     ) -> AsyncIterator[T_TRADE_OFFERS_DATA]:
         ...
 
     async def trade_offers(
-        self,
-        *,
-        active_only=True,
-        time_historical_cutoff: int | datetime = None,
-        historical_only=False,
-        sent=True,
-        received=True,
-        cursor=0,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            self,
+            *,
+            active_only=True,
+            time_historical_cutoff: int | datetime = None,
+            historical_only=False,
+            sent=True,
+            received=True,
+            cursor=0,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
     ) -> AsyncIterator[T_TRADE_OFFERS_DATA]:
         """
         Fetch trade offers from `Steam Web Api`. Return async iterator to paginate over offers pages.
@@ -311,12 +327,12 @@ class TradeMixin(SteamWebApiMixin, SteamCommunityPublicMixin):
         return rj["response"]
 
     async def get_trade_receipt(
-        self,
-        offer_id: int,
-        *,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            self,
+            offer_id: int,
+            *,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
     ) -> HistoryTradeOffer:
         """
         Fetch single trade offer from history.
@@ -348,16 +364,16 @@ class TradeMixin(SteamWebApiMixin, SteamCommunityPublicMixin):
         return self._create_history_trade_offer(data["trades"][0], _item_descriptions_map)
 
     async def get_trade_history(
-        self,
-        *,
-        max_trades=100,
-        start_after_time=0,
-        start_after_trade_id=0,
-        navigating_back=False,
-        include_failed=True,
-        params: T_PARAMS = {},
-        headers: T_HEADERS = {},
-        _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+            self,
+            *,
+            max_trades=100,
+            start_after_time=0,
+            start_after_trade_id=0,
+            navigating_back=False,
+            include_failed=True,
+            params: T_PARAMS = {},
+            headers: T_HEADERS = {},
+            _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
     ) -> tuple[list[HistoryTradeOffer], int]:
         """
         Fetch history trades with changed assets data.
@@ -416,9 +432,9 @@ class TradeMixin(SteamWebApiMixin, SteamCommunityPublicMixin):
 
     @classmethod
     def _parse_items_for_history_trades(
-        cls,
-        items: list[dict],
-        item_descrs_map: T_SHARED_DESCRIPTIONS,
+            cls,
+            items: list[dict],
+            item_descrs_map: T_SHARED_DESCRIPTIONS,
     ) -> list[HistoryTradeOfferItem]:
         return [
             HistoryTradeOfferItem(
@@ -439,11 +455,11 @@ class TradeMixin(SteamWebApiMixin, SteamCommunityPublicMixin):
         ]
 
     async def perform_action_with_offer(
-        self,
-        offer_id: int,
-        action: Literal["cancel", "decline"],
-        payload: T_PAYLOAD,
-        headers: T_HEADERS,
+            self,
+            offer_id: int,
+            action: Literal["cancel", "decline"],
+            payload: T_PAYLOAD,
+            headers: T_HEADERS,
     ) -> dict[str, str]:
         """Cancel or decline trade offer"""
 
@@ -501,35 +517,35 @@ class TradeMixin(SteamWebApiMixin, SteamCommunityPublicMixin):
 
     @overload
     async def accept_trade_offer(
-        self,
-        obj: TradeOffer,
-        *,
-        confirm: bool = ...,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: TradeOffer,
+            *,
+            confirm: bool = ...,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ):
         ...
 
     @overload
     async def accept_trade_offer(
-        self,
-        obj: int,
-        partner: int = ...,
-        *,
-        confirm: bool = ...,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: int,
+            partner: int = ...,
+            *,
+            confirm: bool = ...,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ):
         ...
 
     async def accept_trade_offer(
-        self,
-        obj: int | TradeOffer,
-        partner: int = None,
-        *,
-        confirm=True,
-        payload: T_PAYLOAD = {},
-        headers: T_HEADERS = {},
+            self,
+            obj: int | TradeOffer,
+            partner: int = None,
+            *,
+            confirm=True,
+            payload: T_PAYLOAD = {},
+            headers: T_HEADERS = {},
     ):
         """
         Accept trade offer, yes.
@@ -578,81 +594,81 @@ class TradeMixin(SteamWebApiMixin, SteamCommunityPublicMixin):
 
     @overload
     async def make_trade_offer(
-        self,
-        obj: int,
-        to_give: Sequence[EconItem] = ...,
-        to_receive: Sequence[EconItem] = ...,
-        message: str = ...,
-        *,
-        token: str = ...,
-        confirm: bool = ...,
-        countered_id: int = ...,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: int,
+            to_give: Sequence[EconItem] = ...,
+            to_receive: Sequence[EconItem] = ...,
+            message: str = ...,
+            *,
+            token: str = ...,
+            confirm: bool = ...,
+            countered_id: int = ...,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> int:
         ...
 
     @overload
     async def make_trade_offer(
-        self,
-        obj: str,
-        to_give: Sequence[EconItem] = ...,
-        to_receive: Sequence[EconItem] = ...,
-        message: str = ...,
-        *,
-        confirm: bool = ...,
-        countered_id: int = ...,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: str,
+            to_give: Sequence[EconItem] = ...,
+            to_receive: Sequence[EconItem] = ...,
+            message: str = ...,
+            *,
+            confirm: bool = ...,
+            countered_id: int = ...,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> int:
         ...
 
     @overload
     async def make_trade_offer(
-        self,
-        obj: int,
-        to_give: Sequence[EconItem] = ...,
-        to_receive: Sequence[EconItem] = ...,
-        message: str = ...,
-        *,
-        token: str = ...,
-        fetch: Literal[True] = ...,
-        confirm: bool = ...,
-        countered_id: int = ...,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: int,
+            to_give: Sequence[EconItem] = ...,
+            to_receive: Sequence[EconItem] = ...,
+            message: str = ...,
+            *,
+            token: str = ...,
+            fetch: Literal[True] = ...,
+            confirm: bool = ...,
+            countered_id: int = ...,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> TradeOffer:
         ...
 
     @overload
     async def make_trade_offer(
-        self,
-        obj: str,
-        to_give: Sequence[EconItem] = ...,
-        to_receive: Sequence[EconItem] = ...,
-        message: str = ...,
-        *,
-        fetch: Literal[True] = ...,
-        confirm: bool = ...,
-        countered_id: int = ...,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: str,
+            to_give: Sequence[EconItem] = ...,
+            to_receive: Sequence[EconItem] = ...,
+            message: str = ...,
+            *,
+            fetch: Literal[True] = ...,
+            confirm: bool = ...,
+            countered_id: int = ...,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> TradeOffer:
         ...
 
     async def make_trade_offer(
-        self,
-        obj: int | str,
-        to_give: Sequence[EconItem] = (),
-        to_receive: Sequence[EconItem] = (),
-        message="",
-        *,
-        token: str = None,
-        fetch=False,
-        confirm=True,
-        countered_id: int = None,
-        payload: T_PAYLOAD = {},
-        headers: T_HEADERS = {},
+            self,
+            obj: int | str,
+            to_give: Sequence[EconItem] = (),
+            to_receive: Sequence[EconItem] = (),
+            message="",
+            *,
+            token: str = None,
+            fetch=False,
+            confirm=True,
+            countered_id: int = None,
+            payload: T_PAYLOAD = {},
+            headers: T_HEADERS = {},
     ) -> int | TradeOffer:
         """
         Make (send) steam trade offer to partner.
@@ -743,44 +759,44 @@ class TradeMixin(SteamWebApiMixin, SteamCommunityPublicMixin):
 
     @overload
     async def counter_trade_offer(
-        self,
-        obj: TradeOffer,
-        to_give: Sequence[EconItem] = ...,
-        to_receive: Sequence[EconItem] = ...,
-        message="",
-        *,
-        confirm: bool = ...,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: TradeOffer,
+            to_give: Sequence[EconItem] = ...,
+            to_receive: Sequence[EconItem] = ...,
+            message="",
+            *,
+            confirm: bool = ...,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> int:
         ...
 
     @overload
     async def counter_trade_offer(
-        self,
-        obj: int,
-        to_give: Sequence[EconItem] = ...,
-        to_receive: Sequence[EconItem] = ...,
-        message="",
-        *,
-        partner_id: int,
-        confirm: bool = ...,
-        payload: T_PAYLOAD = ...,
-        headers: T_HEADERS = ...,
+            self,
+            obj: int,
+            to_give: Sequence[EconItem] = ...,
+            to_receive: Sequence[EconItem] = ...,
+            message="",
+            *,
+            partner_id: int,
+            confirm: bool = ...,
+            payload: T_PAYLOAD = ...,
+            headers: T_HEADERS = ...,
     ) -> int:
         ...
 
     def counter_trade_offer(
-        self,
-        obj: TradeOffer | int,
-        to_give: Sequence[EconItem] = (),
-        to_receive: Sequence[EconItem] = (),
-        message="",
-        *,
-        partner_id: int = None,
-        confirm=True,
-        payload: T_PAYLOAD = {},
-        headers: T_HEADERS = {},
+            self,
+            obj: TradeOffer | int,
+            to_give: Sequence[EconItem] = (),
+            to_receive: Sequence[EconItem] = (),
+            message="",
+            *,
+            partner_id: int = None,
+            confirm=True,
+            payload: T_PAYLOAD = {},
+            headers: T_HEADERS = {},
     ) -> CORO[int]:
         """
         Counter trade offer with another.
